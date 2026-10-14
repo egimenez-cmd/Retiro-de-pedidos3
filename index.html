@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Retiro de Pedidos · Mostrador</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+<style>
+:root{--bg:#f3f5f9;--card:#fff;--tx:#14213d;--mut:#6b7280;--br:#e3e7ef;--ac:#f59e0b;--ac2:#1d3557;--ok:#16a34a;--bad:#dc2626;--in:#f8fafc}
+@media (prefers-color-scheme:dark){:root{--bg:#0d1420;--card:#16202f;--tx:#eef2f8;--mut:#9aa7ba;--br:#26344a;--ac2:#274a78;--in:#0f1826}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.4;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+header{background:linear-gradient(135deg,var(--ac2),#0b1b33);color:#fff;padding:22px 20px 60px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 16px}
+header .wrap{padding:0}
+header h1{margin:0;font-size:1.45rem}
+header p{margin:6px 0 0;opacity:.8;font-size:.88rem}
+.pull{margin-top:-38px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+@media(max-width:700px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{background:var(--card);border:1px solid var(--br);border-radius:14px;padding:12px 14px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+.stat b{display:block;font-size:1.7rem;line-height:1}
+.stat span{font-size:.78rem;color:var(--mut)}
+.grid2{display:grid;grid-template-columns:1fr 1.1fr;gap:16px}
+@media(max-width:820px){.grid2{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--br);border-radius:16px;padding:18px;box-shadow:0 8px 24px rgba(0,0,0,.07);margin-bottom:16px}
+.card h2{margin:0 0 12px;font-size:1.05rem}
+label{display:block;font-size:.8rem;font-weight:600;color:var(--mut);margin:12px 0 4px}
+input,select{width:100%;padding:11px 12px;border:1px solid var(--br);border-radius:10px;background:var(--in);color:var(--tx);font:inherit}
+input:focus,select:focus{outline:2px solid var(--ac)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button{cursor:pointer;border-radius:10px;padding:11px 16px;font:inherit;font-weight:700;background:var(--in);color:var(--tx);border:1px solid var(--br)}
+.pri{background:var(--ac);color:#1b1300;border-color:var(--ac)}
+.full{width:100%;margin-top:12px}
+.err{color:var(--bad);font-size:.85rem;min-height:1.1em;margin-top:6px}
+.hide{display:none!important}
+.small{font-size:.8rem;color:var(--mut)}
+.searchbar{display:flex;gap:8px}
+.searchbar input{font-size:1.15rem;padding:14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{--c:#888;padding:7px 12px;font-size:.78rem;border:2px solid var(--c);background:transparent;color:var(--tx);border-radius:99px}
+.chip.on{background:var(--c);color:#fff}
+.tag{display:inline-block;color:#fff;font-weight:800;font-size:.7rem;padding:3px 10px;border-radius:99px;letter-spacing:.03em}
+.est{display:inline-block;font-weight:800;font-size:.7rem;padding:3px 10px;border-radius:99px;background:var(--ac);color:#1b1300}
+.est.r{background:var(--mut);color:#fff}
+/* mueble */
+.mueble{display:flex;flex-direction:column;gap:6px}
+.mrow{display:flex;gap:6px}
+.mc{flex:1;min-width:0;min-height:62px;border-radius:10px;border:2px solid var(--br);background:var(--in);padding:6px;text-align:center;cursor:pointer;display:flex;flex-direction:column;justify-content:center}
+.mc b{font-size:.95rem}
+.mc span{font-size:.68rem;color:var(--mut);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mc.sel{background:var(--ac)!important;border-color:#1b1300!important;color:#1b1300;animation:pul 1s infinite}
+.mc.sel span{color:#3a2800}
+@keyframes pul{50%{transform:scale(1.04)}}
+.pub .mc{cursor:default;min-height:54px}
+.pk{display:flex;gap:10px;align-items:center;padding:10px;border:1px solid var(--br);border-radius:12px;margin-bottom:8px;background:var(--in);cursor:pointer;text-align:left}
+.pk input{width:26px;height:26px;flex:none;accent-color:var(--ok)}
+.pk b.c{font-size:1.6rem;color:var(--ac);min-width:56px;text-align:center}
+canvas.firma{width:100%;height:auto;aspect-ratio:320/140;border:2px dashed var(--mut);border-radius:12px;background:#fff;touch-action:none;display:block}
+.cg3{margin-bottom:16px}
+.celda{font-size:4.5rem;font-weight:900;line-height:1;color:var(--ac);text-align:center;margin:6px 0}
+dl{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;margin:10px 0;font-size:.9rem}
+dt{color:var(--mut)}dd{margin:0;font-weight:600;text-align:right}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th{text-align:left;font-size:.72rem;color:var(--mut);padding:6px 8px;border-bottom:1px solid var(--br)}
+td{padding:9px 8px;border-bottom:1px solid var(--br)}
+tr.r{cursor:pointer}tr.r:hover{background:var(--in)}
+.tw{overflow-x:auto}
+.sr{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:10px;border:1px solid var(--br);border-radius:12px;margin-bottom:8px;cursor:pointer;background:var(--card)}
+.sr b.c{font-size:1.5rem;color:var(--ac)}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.acts button{flex:1}
+/* publico */
+.pubc{max-width:440px;margin:-38px auto 40px;padding:0 16px}
+.pubc .body{text-align:center}
+.stripe{height:8px;background:repeating-linear-gradient(45deg,var(--ac) 0 12px,#1b1b1b 12px 24px);border-radius:0 0 16px 16px;margin-top:-16px}
+/* modales */
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:16px;overflow:auto}
+.modal video{max-width:100%;max-height:60vh;border-radius:14px;background:#000}
+/* etiqueta 100x100 */
+.lbl{width:100mm;height:100mm;padding:4mm;display:flex;flex-direction:column;align-items:center;justify-content:space-between;background:#fff;color:#000;font-family:Arial,Helvetica,sans-serif;overflow:hidden;border:1px solid #000;text-align:center}
+.lbl .t{background:#000;color:#fff;width:100%;font-weight:900;font-size:6.5mm;padding:2mm 0;letter-spacing:.06em}
+.lbl .cl{font-size:6mm;font-weight:800;line-height:1.1;max-height:13mm;overflow:hidden;width:100%}
+.lbl .mid{display:flex;gap:4mm;align-items:center;justify-content:center;width:100%}
+.lbl .q{width:42mm;height:42mm;flex:none}
+.lbl .q img,.lbl .q canvas{width:100%!important;height:100%!important;image-rendering:pixelated;display:block}
+.lbl .cel{flex:1;min-width:0}.lbl .cel small{display:block;font-size:4mm;font-weight:700;letter-spacing:.2em}
+.lbl .cel b{font-size:19mm;line-height:1;font-weight:900}
+.lbl .pn{font-size:7mm;font-weight:900}
+.lbl .s{font-size:3mm;font-weight:700}
+@media print{
+ @page{size:100mm 100mm;margin:0}
+ html,body{background:#fff!important;margin:0;padding:0}
+ .np{display:none!important}
+ #lblmodal:not(.hide){position:static;background:none;padding:0;display:block!important}
+ .lbl{border:0}
+}
+.bl{display:block;text-align:center;text-decoration:none;border-radius:10px;padding:11px 16px;font-weight:700;border:1px solid var(--br);background:var(--in);color:var(--tx);margin-top:8px}
+.bl.wa{background:#25d366;border-color:#25d366;color:#04210f}
+.est.b{background:#2563eb;color:#fff}
+.cellact{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.cellact select{width:auto;padding:7px 8px}
+.cellact button{padding:7px 10px;font-size:.8rem}
+.msgbox{white-space:pre-wrap;background:var(--in);border:1px solid var(--br);border-radius:10px;padding:10px;font-size:.88rem;text-align:left;margin:10px 0}
+.okbox{color:var(--ok);font-weight:700}
+.uchip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;margin:2px 3px 2px 0;border:2px solid #f59e0b;border-radius:99px;font-size:.76rem;font-weight:700}
+.uchip.done{border-color:var(--mut);color:var(--mut)}
+.uchip button{padding:0 4px;border:0;background:none;font-size:.8rem;color:var(--bad)}
+.lin select,.lin input{padding:9px 8px}
+</style>
+</head>
+<body>
+
+<header class="np"><div class="wrap">
+<h1>📦 Retiro de Pedidos · Mostrador</h1>
+<p id="modo"></p>
+</div></header>
+
+<!-- Pantallas públicas (al escanear) -->
+<div id="pub" class="pubc hide np pub"></div>
+
+<!-- PIN -->
+<div id="gate" class="pubc hide np"><div class="card">
+<h2>Acceso de mostrador</h2><input id="pin" type="password" placeholder="PIN" inputmode="numeric">
+<button class="pri full" onclick="checkPin()">Entrar</button><div class="err" id="pinerr"></div></div></div>
+
+<!-- Panel de mostrador -->
+<div id="panel" class="wrap pull hide np">
+  <div class="chips" style="margin-bottom:14px">
+    <button class="chip on" id="tbP" style="--c:#1d3557" onclick="setTab('P')">📦 PEDIDOS</button>
+    <button class="chip" id="tbR" style="--c:#f59e0b" onclick="setTab('R')">🐾 ROTURAS DE ALIMENTO</button>
+  </div>
+  <div id="tabP">
+  <div class="stats">
+    <div class="stat"><b id="s1">0</b><span>Pedidos en espera</span></div>
+    <div class="stat"><b id="s2">0</b><span>Retirados hoy</span></div>
+    <div class="stat"><b id="s3">0</b><span>Celdas ocupadas</span></div>
+    <div class="stat"><b id="s4">0</b><span>Celdas libres</span></div>
+  </div>
+
+  <div class="card">
+    <h2>🔎 Buscar o escanear</h2>
+    <div class="searchbar">
+      <input id="q" autocomplete="off" placeholder="Escaneá o escribí nombre / N° de pedido / código" oninput="buscarStaff(this.value)" onkeydown="if(event.key==='Enter')buscarStaff(this.value,true)">
+      <button class="pri" onclick="camara()">📷</button>
+    </div>
+    <p class="small" style="margin:6px 0 0">Con lector USB, hacé foco en el campo y escaneá. La celda se ilumina en el mueble.</p>
+    <div id="sres" style="margin-top:10px"></div>
+  </div>
+
+  <div class="grid2">
+    <div>
+      <div class="card">
+        <h2>Nuevo pedido</h2>
+        <div class="row">
+          <div><label>N° de pedido *</label><input id="ped" inputmode="numeric" autocomplete="off"></div>
+          <div><label>Código de cliente</label><input id="cod" autocomplete="off"></div>
+        </div>
+        <label>Cliente *</label><input id="cli" autocomplete="off" placeholder="Nombre o empresa" style="text-transform:uppercase">
+        <label>Destino *</label><div class="chips" id="dchips"></div>
+        <div class="row">
+          <div><label>Celda del mueble</label><select id="cel"></select></div>
+          <div><label>Observaciones</label><input id="obs" autocomplete="off"></div>
+        </div>
+        <div class="err" id="err"></div>
+        <div class="acts"><button onclick="guardar(false)">Guardar</button><button class="pri" onclick="guardar(true)">Guardar e imprimir etiqueta</button></div>
+      </div>
+      <div class="card hide" id="res"></div>
+    </div>
+    <div>
+      <div class="card">
+        <h2>Mueble <span class="small" id="mcnt"></span></h2>
+        <div id="plano"></div>
+        <p class="small">Tocá una celda ocupada para ver sus pedidos o una libre para asignarla. Cada celda admite varios pedidos.</p>
+      </div>
+      <div class="card hide" id="det"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Pedidos</h2>
+    <div class="chips" id="fchips" style="margin-bottom:10px"></div>
+    <div class="chips" style="margin:0 0 10px">
+      <button class="chip on" id="e1" style="--c:#f59e0b" onclick="setEst('LISTO')">EN ESPERA</button>
+      <button class="chip" id="e2" style="--c:#6b7280" onclick="setEst('RETIRADO')">RETIRADOS</button>
+      <button class="chip" id="e3" style="--c:#1d3557" onclick="setEst('')">TODOS</button>
+    </div>
+    <div class="tw"><table><thead><tr><th>PEDIDO</th><th>CLIENTE</th><th>DESTINO</th><th>CELDA</th><th>ESTADO</th><th>INGRESO</th></tr></thead><tbody id="lista"></tbody></table></div>
+    <div class="acts" style="margin-top:14px">
+      <button onclick="csv()">⬇ Exportar CSV</button>
+      <button id="bcartel" onclick="cartel()">🖨 Cartel QR "¿Dónde está mi pedido?"</button>
+      <button id="bprobar" onclick="probar()">🔌 Probar conexión</button>
+      <button id="seedb" class="hide" onclick="seed()">Cargar datos de ejemplo</button>
+    </div>
+  </div>
+  </div><!-- /tabP -->
+
+  <div id="tabR" class="hide">
+    <div class="stats">
+      <div class="stat"><b id="r1">0</b><span>Bolsas sin asignar</span></div>
+      <div class="stat"><b id="r2">0</b><span>Anotados en espera</span></div>
+      <div class="stat"><b id="r3">0</b><span>Asignadas por retirar</span></div>
+      <div class="stat"><b id="r4">0</b><span>Retiradas este mes</span></div>
+    </div>
+    <div class="grid2">
+      <div>
+        <div class="card">
+          <h2>🐾 Registrar rotura en depósito</h2>
+          <label>Producto *</label><select id="rp"></select>
+          <div class="row">
+            <div><label>Lote *</label><input id="rl" autocomplete="off" inputmode="numeric"></div>
+            <div><label>Cantidad *</label><input id="rc" type="number" min="1" max="20" value="1"></div>
+          </div>
+          <div class="row">
+            <div><label>Motivo</label><select id="rmo"></select></div>
+            <div><label>Controló *</label><input id="rk" autocomplete="off" maxlength="6" placeholder="Iniciales" style="text-transform:uppercase"></div>
+          </div>
+          <label>Fecha</label><input id="rf" type="date">
+          <div class="err" id="rerr"></div>
+          <button class="pri full" onclick="guardarRotura()">Registrar rotura</button>
+          <p class="small">Cada bolsa queda como una unidad. Después la asignás a la primera persona anotada y le avisás.</p>
+        </div>
+        <div class="card hide" id="rres"></div>
+        <div class="card"><h2>➕ Anotar un pedido (a pedido de la persona)</h2><div id="stform"></div></div>
+      </div>
+      <div>
+        <div class="card">
+          <h2>⏳ Pedidos en espera <span class="small">· por orden de llegada</span></h2>
+          <div class="chips" style="margin-bottom:10px"><button class="chip" id="wdone" style="--c:#6b7280" onclick="toggleDone()">VER TAMBIÉN COMPLETADOS</button></div>
+          <div id="wlist"></div>
+          <p class="small">Lo <s>tachado</s> ya tiene bolsa asignada. Con ✕ quitás un pedido que ya no corresponde.</p>
+        </div>
+        <div class="card"><h2>🥇 Prioridad por producto</h2><div id="prio"></div>
+          <p class="small">Arriba está quien pidió primero. Al asignar una bolsa, el botón propone siempre al primero con cupo.</p></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Roturas registradas</h2>
+      <div class="chips" id="rchips" style="margin-bottom:10px"></div>
+      <div class="tw"><table><thead><tr><th>FECHA</th><th>PRODUCTO</th><th>LOTE</th><th>ESTADO</th><th>PERSONA</th><th>ACCIONES</th></tr></thead><tbody id="rlist"></tbody></table></div>
+      <div class="acts" style="margin-top:14px">
+        <button onclick="csvR()">⬇ Exportar CSV (formato planilla)</button>
+        <button id="bcartelR" onclick="cartelR()">🖨 Cartel QR "Anotate a roturas"</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Cupo del mes por persona <span class="small" id="mesl"></span></h2>
+      <div class="tw"><table><thead><tr><th>PERSONA</th><th>WHATSAPP</th><th>USADAS</th><th>DISPONIBLES</th><th>EN ESPERA</th></tr></thead><tbody id="clist"></tbody></table></div>
+    </div>
+  </div><!-- /tabR -->
+</div>
+
+<!-- Aviso al anotado -->
+<div id="avmodal" class="modal hide np"><div class="card" style="max-width:440px;width:100%" id="avbody"></div></div>
+
+<!-- Etiqueta / cartel -->
+<div id="lblmodal" class="modal hide">
+  <div id="lblArea"></div>
+  <div class="acts np"><button class="pri" onclick="window.print()">🖨 Imprimir</button><button onclick="$('lblmodal').classList.add('hide')">Cerrar</button></div>
+</div>
+
+<!-- Cámara -->
+<div id="scanmodal" class="modal hide np">
+  <video id="vid" playsinline muted></video><canvas id="cv" class="hide"></canvas>
+  <div id="scanmsg" style="color:#fff">Apuntá al código QR</div>
+  <button onclick="cerrarCam()">Cerrar</button>
+</div>
+
+<script>
+/* ===== CONFIGURACIÓN ===== */
+const CONFIG={
+  FIREBASE_URL:'https://retiro-de-pedidos-default-rtdb.firebaseio.com',   // misma base que el control de visitas (vacío = solo este equipo)
+  PIN:'',            // PIN opcional para el mostrador
+  MUEBLE:[['A1','B1','C1','D1'],['A2','B2','C2','D2'],['AB3','CD3'],['AB4','CD4']],  // filas del mueble
+  DESTINOS:[
+    {k:'RETIRA',c:'#16a34a'},
+    {k:'OFICINA 2DO PISO',c:'#2563eb'},
+    {k:'3ER PISO',c:'#7c3aed'},
+    {k:'COMPRAS',c:'#0d9488'},
+    {k:'PLANTA',c:'#ea580c'}
+  ],
+  /* ---- ROTURAS DE ALIMENTO ---- */
+  LIMITE_MES:2,                      // bolsas por persona por mes
+  PREFIJO_WA:'549',                  // Argentina: 549 + área + número (sin 0 ni 15)
+  LUGAR_RETIRO:'el mostrador',       // texto que va en el aviso
+  FIRMA_MSG:'Retiro de roturas · Logística',
+  MOTIVOS:['Roturas en deposito'],
+  /* COMPLETAR los códigos que faltan */
+  PRODUCTOS:[
+    {k:'articular2',n:'MV ARTICULAR X 2 KG',c:''},
+    {k:'articular10',n:'MV ARTICULAR x 10 Kg',c:''},
+    {k:'cardiaco2',n:'MV CARDIACO x 2 Kg',c:''},
+    {k:'cardiaco10',n:'MV CARDIACO x 10 Kg',c:''},
+    {k:'gatosgastro2',n:'MV GATOS GASTROINTESTINAL X 2 KG',c:''},
+    {k:'gatosobeso2',n:'MV GATOS OBESIDAD X 2 KG',c:''},
+    {k:'gatosrenal2',n:'MV GATOS RENAL X 2 KG',c:''},
+    {k:'gatosurinario2',n:'MV GATOS URINARIO x 2 Kg',c:''},
+    {k:'gatosurinario75',n:'MV GATOS URINARIO x 7.5 Kg',c:''},
+    {k:'perrosgastro2',n:'MV PERROS GASTROINTESTINAL x 2 Kg',c:''},
+    {k:'perrosgastro10',n:'MV PERROS GASTROINTESTINAL x 10 Kg',c:''},
+    {k:'perrosobeso2',n:'MV PERROS OBESIDAD x 2 Kg',c:''},
+    {k:'perrosobeso10',n:'MV PERROS OBESIDAD x 10 Kg',c:''},
+    {k:'renal2',n:'MV RENAL x 2 Kg',c:'30-0004-0-AR'},
+    {k:'renal10',n:'MV RENAL x 10 Kg',c:''},
+    {k:'sensibilidad2',n:'MV SENSIBILIDAD DIETARIA X 2 KG',c:''},
+    {k:'sensibilidad10',n:'MV SENSIBILIDAD DIETARIA x 10 Kg',c:''}
+  ],
+  /* Opcional: envío AUTOMÁTICO de mails con EmailJS (emailjs.com). Vacío = se abre el mail/WhatsApp con el texto ya escrito */
+  EMAILJS:{service:'',template:'',key:''}
+};
+/* ========================= */
+const $=id=>document.getElementById(id);
+const FB=CONFIG.FIREBASE_URL.trim().replace(/\.json.*$/,'').replace(/\/+$/,'');
+const AVISO_LOCAL=FB?'':'<div class="card body" style="border-color:var(--bad)"><b style="color:var(--bad)">⚠ Página sin base de datos</b><p class="small">Esta página todavía no está conectada a Firebase, por eso no puede mostrar pedidos cargados desde otro equipo. Falta pegar la dirección en FIREBASE_URL.</p></div>';
+const CELDAS=CONFIG.MUEBLE.flat();
+const pad=n=>String(n).padStart(2,'0');
+const fh=t=>{const d=new Date(t);return pad(d.getDate())+'/'+pad(d.getMonth()+1)+' '+pad(d.getHours())+':'+pad(d.getMinutes())};
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const norm=s=>String(s||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toUpperCase().trim();
+const base=()=>location.href.split('#')[0];
+const pkey=p=>'p'+String(p).replace(/[^A-Za-z0-9]/g,'_');
+const dest=k=>CONFIG.DESTINOS.find(d=>d.k===k)||CONFIG.DESTINOS[0];
+const tag=k=>`<span class="tag" style="background:${dest(k).c}">${esc(k)}</span>`;
+const estTag=p=>p.e==='LISTO'?'<span class="est">EN ESPERA</span>':'<span class="est r">RETIRADO</span>';
+
+/* ---- almacenamiento: Firebase (compartido) o localStorage (solo este equipo) ---- */
+const LSK='retiro_db_v1';
+const lsRead=()=>{try{return JSON.parse(localStorage.getItem(LSK))||{}}catch(e){return{}}};
+const lsWrite=o=>{try{localStorage.setItem(LSK,JSON.stringify(o))}catch(e){}};
+async function dbGet(p){
+  if(FB){const r=await fetch(`${FB}/${p}.json`);if(!r.ok)throw new Error('db');return r.json()}
+  let o=lsRead();for(const k of p.split('/')){o=o?o[k]:undefined}
+  return o===undefined?null:o}
+async function dbSet(p,val){
+  if(FB){const r=await fetch(`${FB}/${p}.json`,{method:val===null?'DELETE':'PUT',body:val===null?undefined:JSON.stringify(val)});if(!r.ok)throw new Error('db');return}
+  const root=lsRead(),ks=p.split('/');let o=root;
+  ks.slice(0,-1).forEach(k=>{o=o[k]=o[k]||{}});
+  if(val===null)delete o[ks[ks.length-1]];else o[ks[ks.length-1]]=val;
+  lsWrite(root)}
+
+const b64e=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const b64d=s=>JSON.parse(decodeURIComponent(escape(atob(s.replace(/-/g,'+').replace(/_/g,'/')))));
+
+/* ---- mueble ---- */
+function planoHTML(occ,sel,pub){
+  return '<div class="mueble">'+CONFIG.MUEBLE.map(row=>'<div class="mrow">'+row.map(c=>{
+    const L=occ[c]||[],p=L[0],col=p?(L.every(x=>x.d===p.d)?dest(p.d).c:'#64748b'):'',st=p&&!pub?`background:${col}26;border-color:${col}`:'';
+    return `<div class="mc ${(Array.isArray(sel)?sel.includes(c):sel===c)?'sel':''}" style="${st}" ${pub?'':`onclick="pickCell('${c}')"`}><b>${c}</b>${pub?'':`<span>${L.length>1?L.length+' pedidos':p?esc(p.cl):'libre'}</span>`}</div>`}).join('')+'</div>').join('')+'</div>'}
+
+/* ---- búsqueda ---- */
+function buscar(q,list,min){
+  const Q=norm(q);if(!Q)return[];
+  return Object.values(list).map(p=>{const N=norm(p.n),C=norm(p.co),L=norm(p.cl);let s=0;
+    if(N===Q||C===Q)s=3;else if(Q.length>=min){if(N.startsWith(Q))s=2;else if(L.includes(Q))s=1}
+    return{p,s}}).filter(x=>x.s)
+    .sort((a,b)=>(b.p.e==='LISTO')-(a.p.e==='LISTO')||b.s-a.s||b.p.t-a.p.t).map(x=>x.p)}
+
+/* ---- pantallas públicas ---- */
+function resCardPub(p){
+  if(p.e!=='LISTO')return `<div class="card body"><span class="est r">YA RETIRADO</span><h3 style="margin:10px 0 0">${esc(p.cl)}</h3><p class="small">Pedido N° ${esc(p.n)} · retirado el ${p.f?fh(p.f):'—'}</p></div>`;
+  return `<div class="card body"><div class="small">TU PEDIDO ESTÁ EN LA CELDA</div><div class="celda">${esc(p.c)}</div>
+  <div>${tag(p.d)}</div>${p.d==='RETIRA'?'<p style="margin:10px 0 0"><b>Retiralo por el mostrador</b></p>':''}
+  <h3 style="margin:12px 0 0">${esc(p.cl)}</h3><div class="small">Pedido N° ${esc(p.n)}</div>
+  <div style="margin-top:14px">${planoHTML({},p.c,true)}</div></div>`}
+async function vistaPedido(n){
+  $('pub').classList.remove('hide');$('pub').innerHTML='<div class="card body">Buscando…</div>';
+  try{const p=await dbGet('pedidos/'+pkey(n));
+    $('pub').innerHTML=p?resCardPub(p):`<div class="card body"><span class="est r">NO ENCONTRADO</span><p>No hay un pedido N° ${esc(n)}.</p>${FB?'':'<p class="small">⚠ Modo local: los datos solo se ven en el equipo del mostrador.</p>'}<button onclick="location.hash='consulta'">Buscar por nombre</button></div>`}
+  catch(e){$('pub').innerHTML='<div class="card body"><span class="tag" style="background:var(--bad)">Sin conexión</span></div>'}}
+function vistaConsulta(){
+  $('pub').classList.remove('hide');
+  if(!FB){$('pub').innerHTML='<div class="card body"><h2>¿Dónde está mi pedido?</h2><p>Esta consulta todavía no está habilitada. Consultá en el mostrador.</p></div>';return}
+  $('pub').innerHTML=`<div class="card"><h2>¿Dónde está mi pedido?</h2><input id="pq" placeholder="Tu nombre, empresa o código de cliente" autocomplete="off" oninput="consultar(this.value)"><p class="small">Escribí al menos 3 letras de tu nombre, o tu código de cliente.</p></div><div id="pr"></div>`;
+  $('pq').focus()}
+let ct=null;
+function consultar(q){clearTimeout(ct);ct=setTimeout(async()=>{
+  try{
+    const l=await dbGet('pedidos')||{},Q=norm(q);
+    const hit=buscar(q,l,3),clientes=[];
+    hit.forEach(p=>{const k=norm(p.cl);if(!clientes.includes(k))clientes.push(k)});
+    const g=clientes.slice(0,3).map((k,i)=>grupoHTML(i,Object.entries(l).filter(([kk,p])=>norm(p.cl)===k)));
+    $('pr').innerHTML=g.length?g.join(''):(Q.length>=3?'<div class="card body">No encontramos pedidos con ese dato. Consultá en el mostrador.</div>':'');
+    g.forEach((_,i)=>{if($('sg'+i))initFirma('sg'+i)})
+  }catch(e){$('pr').innerHTML='<div class="card body">Sin conexión.</div>'}},300)}
+function grupoHTML(i,lista){
+  const nombre=lista[0][1].cl,act=lista.filter(([k,p])=>p.e==='LISTO').sort((a,b)=>a[1].t-b[1].t),ret=lista.length-act.length;
+  if(!act.length)return `<div class="card body cg3"><h3 style="margin:0">${esc(nombre)}</h3><p>No tiene pedidos pendientes de retiro.</p><p class="small">${ret} pedido(s) ya retirado(s).</p></div>`;
+  return `<div class="card cg3" id="g${i}"><h3 style="margin:0 0 4px">${esc(nombre)}</h3>
+  <p class="small" style="margin:0 0 10px">${act.length} pedido(s) para retirar. Mirá en qué celda está cada uno:</p>
+  ${planoHTML({},act.map(([k,p])=>p.c),true)}
+  <div style="margin-top:14px">${act.map(([k,p])=>`<label class="pk"><input type="checkbox" data-g="${i}" value="${k}"><b class="c">${esc(p.c)}</b><div><b>Pedido N° ${esc(p.n)}</b><div>${tag(p.d)}</div></div></label>`).join('')}</div>
+  <p class="small" style="margin:12px 0 4px"><b>Cuando lo retires,</b> tildá lo que te llevás y firmá:</p>
+  <label>Nombre y apellido de quien retira</label><input id="rn${i}" autocomplete="off">
+  <label>Firma</label><canvas id="sg${i}" class="firma"></canvas>
+  <button style="margin-top:6px" onclick="initFirma('sg${i}')">Borrar firma</button>
+  <div class="err" id="rm${i}"></div>
+  <button class="pri full" id="cb${i}" onclick="confirmar(${i})">✔ Confirmar retiro</button></div>`}
+const FIRMAS={};
+function initFirma(id){
+  const c=$(id);if(!c)return;const x=c.getContext('2d');c.width=320;c.height=140;
+  x.fillStyle='#fff';x.fillRect(0,0,320,140);x.lineWidth=2.6;x.lineCap='round';x.lineJoin='round';x.strokeStyle='#000';
+  let d=false;FIRMAS[id]=false;
+  const pt=e=>{const r=c.getBoundingClientRect();return[(e.clientX-r.left)*c.width/r.width,(e.clientY-r.top)*c.height/r.height]};
+  c.onpointerdown=e=>{d=true;c.setPointerCapture(e.pointerId);const[a,b]=pt(e);x.beginPath();x.moveTo(a,b);x.lineTo(a+.1,b+.1);x.stroke();FIRMAS[id]=true;e.preventDefault()};
+  c.onpointermove=e=>{if(!d)return;const[a,b]=pt(e);x.lineTo(a,b);x.stroke();e.preventDefault()};
+  c.onpointerup=c.onpointercancel=()=>{d=false}}
+async function confirmar(i){
+  const keys=[...document.querySelectorAll(`input[data-g="${i}"]:checked`)].map(e=>e.value),nom=$('rn'+i).value.trim(),msg=$('rm'+i);
+  if(!keys.length){msg.textContent='Tildá al menos un pedido.';return}
+  if(!nom){msg.textContent='Escribí tu nombre y apellido.';return}
+  if(!FIRMAS['sg'+i]){msg.textContent='Falta tu firma.';return}
+  msg.textContent='';$('cb'+i).disabled=true;
+  try{
+    const firma=$('sg'+i).toDataURL('image/png'),now=Date.now(),ok=[];
+    for(const k of keys){const p=await dbGet('pedidos/'+k);
+      if(p&&p.e==='LISTO'){await dbSet('firmas/'+k,firma);await dbSet('pedidos/'+k,{...p,e:'RETIRADO',f:now,rb:nom,fi:1});ok.push(p)}}
+    $('g'+i).innerHTML=ok.length?`<div class="body" style="text-align:center"><span class="status ok" style="background:var(--ok);color:#fff;padding:4px 12px;border-radius:99px;font-weight:800">✔ RETIRO REGISTRADO</span>
+      <h3>${esc(nom)}</h3>${ok.map(p=>`<div>Pedido N° ${esc(p.n)} · celda ${esc(p.c)}</div>`).join('')}<p class="small">${fh(now)}</p></div>`
+      :'<div class="body" style="text-align:center"><p>Esos pedidos ya habían sido retirados.</p></div>'
+  }catch(e){msg.textContent='No se pudo registrar. Intentá de nuevo.';$('cb'+i).disabled=false}}
+
+/* El QR de la etiqueta lleva los datos adentro: funciona en cualquier celular sin base de datos */
+async function vistaSnapshot(txt){
+  $('pub').classList.remove('hide');
+  let s;try{s=b64d(txt)}catch(e){$('pub').innerHTML='<div class="card body"><span class="est r">QR NO VÁLIDO</span><p>Consultá en el mostrador.</p></div>';return}
+  let p={...s,e:'LISTO'},live=false;
+  if(FB){try{const r=await dbGet('pedidos/'+pkey(s.n));if(r){p=r;live=true}}catch(e){}}
+  $('pub').innerHTML=resCardPub(p)+(live?'':`<p class="small" style="text-align:center">Datos al momento del ingreso (${fh(s.t)}). Ante cualquier duda, consultá en el mostrador.</p>`)}
+
+/* ---- panel de mostrador ---- */
+let P={},selKey=null,destSel=CONFIG.DESTINOS[0].k,fDest='',fEst='LISTO';
+const activos=()=>Object.values(P).filter(p=>p.e==='LISTO');
+const occMap=()=>{const o={};activos().forEach(p=>{(o[p.c]=o[p.c]||[]).push(p)});return o};
+let selCell=null;
+async function refresh(){
+  try{P=(await dbGet('pedidos'))||{};$('modo').textContent=FB?'🟢 Base de datos compartida conectada':'💻 Datos guardados en este equipo · los QR de las etiquetas se leen desde cualquier celular'}
+  catch(e){$('modo').textContent='🔴 Sin conexión con la base de datos'}
+  render()}
+function render(){
+  const occ=occMap(),hoy=new Date().toDateString(),n=Object.keys(occ).length;
+  $('s1').textContent=activos().length;
+  $('s2').textContent=Object.values(P).filter(p=>p.e==='RETIRADO'&&p.f&&new Date(p.f).toDateString()===hoy).length;
+  $('s3').textContent=n;$('s4').textContent=CELDAS.length-n;$('mcnt').textContent=`· ${n} ocupadas / ${CELDAS.length-n} libres`;
+  const sel=selKey&&P[selKey]&&P[selKey].e==='LISTO'?P[selKey].c:selCell;
+  $('plano').innerHTML=planoHTML(occ,sel,false);
+  chips();celdaSel();lista();detalle();
+  $('seedb').classList.toggle('hide',Object.keys(P).length>0)}
+function chips(){
+  $('dchips').innerHTML=CONFIG.DESTINOS.map(d=>`<button type="button" class="chip ${destSel===d.k?'on':''}" style="--c:${d.c}" onclick="setDest('${d.k}')">${d.k}</button>`).join('');
+  const cnt=k=>activos().filter(p=>!k||p.d===k).length;
+  $('fchips').innerHTML=`<button class="chip ${fDest===''?'on':''}" style="--c:#1d3557" onclick="setF('')">TODOS (${cnt('')})</button>`+CONFIG.DESTINOS.map(d=>`<button class="chip ${fDest===d.k?'on':''}" style="--c:${d.c}" onclick="setF('${d.k}')">${d.k} (${cnt(d.k)})</button>`).join('')}
+const setDest=k=>{destSel=k;chips()};
+const setF=k=>{fDest=k;chips();lista()};
+function setEst(e){fEst=e;['LISTO','RETIRADO',''].forEach((x,i)=>$('e'+(i+1)).classList.toggle('on',x===e));lista()}
+function celdaSel(){
+  const cur=$('cel').value,occ=occMap();
+  const libres=CELDAS.filter(c=>!occ[c]);
+  $('cel').innerHTML=CELDAS.map(c=>`<option value="${c}">${c} · ${occ[c]?'ocupada ('+occ[c].length+')':'libre'}</option>`).join('');
+  if(cur&&CELDAS.includes(cur))$('cel').value=cur;else if(libres.length)$('cel').value=libres[0]}
+function lista(){
+  const l=Object.entries(P).filter(([k,p])=>(!fEst||p.e===fEst)&&(!fDest||p.d===fDest)).sort((a,b)=>b[1].t-a[1].t).slice(0,200);
+  $('lista').innerHTML=l.length?l.map(([k,p])=>`<tr class="r" onclick="pickPedido('${k}')"><td><b>${esc(p.n)}</b></td><td>${esc(p.cl)}</td><td>${tag(p.d)}</td><td><b>${p.e==='LISTO'?esc(p.c):'—'}</b></td><td>${estTag(p)}</td><td>${fh(p.t)}</td></tr>`).join(''):'<tr><td colspan="6" class="small" style="text-align:center;padding:20px">Sin pedidos para mostrar.</td></tr>'}
+function pickCell(c){
+  const L=occMap()[c]||[];
+  if(L.length===1){pickPedido(pkey(L[0].n))}
+  else if(L.length>1){selKey=null;selCell=c;render();$('det').scrollIntoView({behavior:'smooth',block:'nearest'})}
+  else{selKey=null;selCell=null;render();$('cel').value=c;$('ped').focus()}}
+function addAqui(c){selKey=null;selCell=null;render();$('cel').value=c;$('ped').focus()}
+function pickPedido(k){selKey=k;selCell=null;render();$('det').scrollIntoView({behavior:'smooth',block:'nearest'})}
+function detalle(){
+  const p=P[selKey],d=$('det'),occ=occMap();
+  if(!p){
+    const L=selCell&&occ[selCell];
+    if(!L){d.classList.add('hide');return}
+    d.classList.remove('hide');
+    d.innerHTML=`<h2>Celda ${esc(selCell)} <span class="small">· ${L.length} pedido(s) en espera</span></h2>
+    ${L.sort((a,b)=>a.t-b.t).map(x=>`<div class="sr" onclick="pickPedido('${pkey(x.n)}')"><div><b>${esc(x.cl)}</b> <span class="small">N° ${esc(x.n)}</span><div>${tag(x.d)}</div></div><b class="c">${esc(x.c)}</b></div>`).join('')}
+    <div class="acts"><button class="pri" onclick="addAqui('${esc(selCell)}')">➕ Asignar otro pedido a esta celda</button></div>`;return}
+  d.classList.remove('hide');
+  d.innerHTML=`<h2>Pedido N° ${esc(p.n)} ${estTag(p)}</h2>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><div><b style="font-size:1.1rem">${esc(p.cl)}</b><div class="small">Código ${esc(p.co)||'—'}</div></div>${tag(p.d)}</div>
+  <div class="celda">${p.e==='LISTO'?esc(p.c):'—'}</div>
+  <dl><dt>Ingreso</dt><dd>${fh(p.t)}</dd>${p.f?`<dt>Retirado</dt><dd>${fh(p.f)}</dd>`:''}${p.rb?`<dt>Retiró</dt><dd>${esc(p.rb)}</dd>`:''}${p.o?`<dt>Obs.</dt><dd>${esc(p.o)}</dd>`:''}</dl>
+  ${p.e==='LISTO'?`<div class="row"><div><label>Cambiar destino</label><select onchange="cambiar('d',this.value)">${CONFIG.DESTINOS.map(x=>`<option ${x.k===p.d?'selected':''}>${x.k}</option>`).join('')}</select></div>
+  <div><label>Mover a celda</label><select onchange="cambiar('c',this.value)">${CELDAS.map(c=>`<option value="${c}" ${c===p.c?'selected':''}>${c}${occ[c]?' ('+occ[c].length+')':''}</option>`).join('')}</select></div></div>
+  <div class="acts"><button class="pri" onclick="retirar()">✔ Marcar RETIRADO</button><button onclick="reimprimir()">🖨 Etiqueta</button><button onclick="addAqui('${esc(p.c)}')">➕ Otro pedido en ${esc(p.c)}</button></div>`
+  :`${p.fi?'<div><div class="small">Firma</div><img id="fimg" alt="firma" style="width:100%;max-width:260px;background:#fff;border:1px solid var(--br);border-radius:8px"></div>':''}<div class="acts"><button onclick="reabrir()">↩ Volver a EN ESPERA</button></div>`}`;
+  if(p.e!=='LISTO'&&p.fi){const k=selKey;dbGet('firmas/'+k).then(f=>{const im=$('fimg');if(im&&selKey===k&&typeof f==='string'&&f.startsWith('data:image/png;base64,'))im.src=f}).catch(()=>{})}}
+async function cambiar(f,v){
+  const p=P[selKey];if(!p||p[f]===v)return;
+  try{await dbSet('pedidos/'+selKey,{...p,[f]:v});await refresh()}catch(e){alert('No se pudo guardar el cambio.')}}
+async function retirar(){
+  const p=P[selKey];if(!p)return;
+  try{await dbSet('pedidos/'+selKey,{...p,e:'RETIRADO',f:Date.now()});const c=p.c;selKey=null;$('q').value='';$('sres').innerHTML='';await refresh();if((occMap()[c]||[]).length){selCell=c;render()}}catch(e){alert('No se pudo registrar el retiro.')}}
+async function reabrir(){
+  const p=P[selKey];if(!p)return;
+  try{const q={...p,e:'LISTO'};delete q.f;await dbSet('pedidos/'+selKey,q);await refresh()}catch(e){alert('Error.')}}
+async function guardar(imprimir){
+  const g=id=>$(id).value.trim(),n=g('ped'),cel=$('cel').value;
+  if(!n||!g('cli')){$('err').textContent='Completá N° de pedido y cliente.';return}
+  if(!cel){$('err').textContent='Elegí una celda.';return}
+  $('err').textContent='';
+  try{
+    P=(await dbGet('pedidos'))||{};const k=pkey(n);
+    if(P[k]&&P[k].e==='LISTO'){$('err').textContent='Ya hay un pedido en espera con ese número.';render();return}
+    const p={n,cl:g('cli').toUpperCase(),co:g('cod'),d:destSel,c:cel,e:'LISTO',t:Date.now(),o:g('obs')};
+    await dbSet('pedidos/'+k,p);
+    $('res').classList.remove('hide');$('res').innerHTML=`<div style="text-align:center"><div class="small">COLOCAR EL PEDIDO EN LA CELDA</div><div class="celda">${esc(cel)}</div>${tag(p.d)}<div style="margin-top:6px"><b>${esc(p.cl)}</b> · N° ${esc(n)}</div></div>`;
+    ['ped','cod','cli','obs'].forEach(i=>$(i).value='');
+    selKey=k;await refresh();
+    if(imprimir)etiqueta(p);else $('ped').focus()
+  }catch(e){$('err').textContent='No se pudo guardar. Revisá la conexión.'}}
+
+/* ---- escaneo / búsqueda de mostrador ---- */
+let bt=null;
+function buscarStaff(q,enter){
+  clearTimeout(bt);bt=setTimeout(()=>{
+    const m=String(q).match(/#p=([^&\s]+)/);if(m)q=decodeURIComponent(m[1]);
+    const r=buscar(q,P,2).slice(0,6);
+    $('sres').innerHTML=r.length?r.map(p=>`<div class="sr" onclick="pickPedido('${pkey(p.n)}')"><div><b>${esc(p.cl)}</b> <span class="small">N° ${esc(p.n)}</span><div>${tag(p.d)} ${estTag(p)}</div></div><b class="c">${p.e==='LISTO'?esc(p.c):'—'}</b></div>`).join(''):(norm(q).length>1?'<div class="small">Sin resultados.</div>':'');
+    if(r.length===1&&(enter||m||norm(q)===norm(r[0].n)))pickPedido(pkey(r[0].n))},enter?0:200)}
+let stream=null,scanning=false;
+async function camara(){
+  $('scanmodal').classList.remove('hide');$('scanmsg').textContent='Apuntá al código QR';
+  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    const v=$('vid');v.srcObject=stream;await v.play();scanning=true;leer()}
+  catch(e){$('scanmsg').textContent='No se pudo abrir la cámara (requiere HTTPS y permiso).'}}
+function leer(){
+  if(!scanning)return;const v=$('vid');
+  if(v.readyState===4&&window.jsQR){
+    const w=Math.min(640,v.videoWidth),h=Math.round(v.videoHeight*w/v.videoWidth),c=$('cv'),x=c.getContext('2d',{willReadFrequently:true});
+    c.width=w;c.height=h;x.drawImage(v,0,0,w,h);
+    const r=jsQR(x.getImageData(0,0,w,h).data,w,h);
+    if(r&&r.data){cerrarCam();$('q').value=r.data;buscarStaff(r.data,true);return}}
+  setTimeout(leer,150)}
+function cerrarCam(){scanning=false;if(stream)stream.getTracks().forEach(t=>t.stop());stream=null;$('scanmodal').classList.add('hide')}
+
+/* ---- etiquetas ---- */
+function qr(el,text,size){try{new QRCode(el,{text,width:256,height:256,correctLevel:QRCode.CorrectLevel.M})}catch(e){}}
+function etiqueta(p){
+  $('lblArea').innerHTML=`<div class="lbl"><div class="t">${esc(p.d)}</div><div class="cl">${esc(p.cl)}</div>
+  <div class="mid"><div class="q"></div><div class="cel"><small>CELDA</small><b>${esc(p.c)}</b></div></div>
+  <div class="pn">PEDIDO N° ${esc(p.n)}</div><div class="s">${fh(p.t)} · ESCANEAR PARA VER UBICACIÓN</div></div>`;
+  qr($('lblArea').querySelector('.q'),base()+'#d='+b64e({n:p.n,cl:p.cl,d:p.d,c:p.c,t:p.t}));
+  $('lblmodal').classList.remove('hide')}
+const reimprimir=()=>{if(P[selKey])etiqueta(P[selKey])};
+function cartel(){
+  if(!FB){alert('El cartel de búsqueda por nombre necesita una base de datos compartida. Por ahora usá las etiquetas con QR de cada pedido, que funcionan solas.');return}
+  $('lblArea').innerHTML=`<div class="lbl"><div class="t">¿DÓNDE ESTÁ MI PEDIDO?</div>
+  <div class="q" style="width:60mm;height:60mm"></div><div class="pn" style="font-size:5.5mm">ESCANEÁ, BUSCÁ TU NOMBRE<br>O CÓDIGO Y FIRMÁ EL RETIRO</div><div class="s">Retiro de pedidos · mostrador</div></div>`;
+  qr($('lblArea').querySelector('.q'),base()+'#consulta');
+  $('lblmodal').classList.remove('hide')}
+
+/* ---- utilidades ---- */
+async function probar(){
+  if(!FB){alert('Modo local: falta pegar la dirección de Firebase en FIREBASE_URL (arriba del script).');return}
+  try{const v=Date.now();await dbSet('ping',v);const r=await dbGet('ping');
+    alert(r===v?'✅ Conexión correcta con Firebase.':'⚠ Se conectó, pero la lectura no coincide.')}
+  catch(e){alert('❌ No se pudo conectar. Revisá la dirección y que las reglas tengan .read y .write en true.')}}
+function csv(){
+  const q=s=>'"'+String(s==null?'':s).replace(/"/g,'""')+'"';
+  const rows=Object.values(P).sort((a,b)=>a.t-b.t).map(p=>[p.n,p.cl,p.co,p.d,p.c,p.e,fh(p.t),p.f?fh(p.f):'',p.rb||'',p.o].map(q).join(','));
+  const out=['Pedido,Cliente,Codigo,Destino,Celda,Estado,Ingreso,Retiro,Retiro por,Observaciones'].concat(rows).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+out],{type:'text/csv'}));
+  a.download='pedidos-'+new Date().toISOString().slice(0,10)+'.csv';a.click()}
+async function seed(){
+  const S=[['35325','EZEQUIEL GIMENEZ','123','RETIRA','A1','LISTO'],['1','JUAN ACEVEDO','1234','COMPRAS','A2','LISTO'],['2','TOMAS ZIRKEL','159','PLANTA','AB3','LISTO'],['3','CDI','187','RETIRA','CD4','RETIRADO'],['4','DE SOUZA','222','OFICINA 2DO PISO','D1','LISTO']];
+  for(const s of S){const p={n:s[0],cl:s[1],co:s[2],d:s[3],c:s[4],e:s[5],t:Date.now(),o:''};if(s[5]==='RETIRADO')p.f=Date.now();await dbSet('pedidos/'+pkey(s[0]),p)}
+  refresh()}
+
+/* ================= ROTURAS DE ALIMENTO ================= */
+/* Base de datos:  roturas/{id}  ·  anot/{persona}/{id}  ·  cupo/{persona}/{AAAA-MM}  (persona = últimos 10 dígitos del WhatsApp) */
+const LIM=CONFIG.LIMITE_MES;
+const fd=t=>{const d=new Date(t);return pad(d.getDate())+'/'+pad(d.getMonth()+1)+'/'+d.getFullYear()};
+const mesKey=t=>{const d=new Date(t||Date.now());return d.getFullYear()+'-'+pad(d.getMonth()+1)};
+const hoyISO=()=>{const d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())};
+const dig=s=>String(s||'').replace(/\D/g,'');
+const pkOf=wa=>{const d=dig(wa);return d.length>=10?'u'+d.slice(-10):''};
+const uid=p=>p+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+const prodN=k=>{const x=CONFIG.PRODUCTOS.find(p=>p.k===k);return x?x.n:(k==='*'?'Cualquier producto':k)};
+const prodOpts=any=>(any?'<option value="*">Cualquier producto</option>':'')+CONFIG.PRODUCTOS.map(p=>`<option value="${esc(p.k)}">${esc(p.n)}</option>`).join('');
+const emailOk=e=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+const rest=u=>Math.max(0,LIM-u);
+const plural=(n,a,b)=>n===1?a:b;
+
+let R={},A={},fRot='DISPONIBLE',showDone=false;
+const MAXQ=5,MAXPEND=10;
+const shortN=k=>k==='*'?'Cualquiera':prodN(k).replace(/^MV /,'');
+const toggleDone=()=>{showDone=!showDone;$('wdone').classList.toggle('on',showDone);renderR()};
+const usadas=(pk,mes)=>Object.values(R).filter(r=>r.pk===pk&&r.m===mes&&(r.e==='ASIGNADA'||r.e==='RETIRADA')).length;
+
+function initR(){
+  $('rp').innerHTML=prodOpts(false);$('rmo').innerHTML=CONFIG.MOTIVOS.map(m=>`<option>${esc(m)}</option>`).join('');
+  $('rf').value=hoyISO();$('mesl').textContent='· '+mesKey();
+  $('bcartelR').classList.toggle('hide',!FB);$('stform').innerHTML=formAnotar('s','Anotar pedido')}
+function setTab(t){
+  $('tabP').classList.toggle('hide',t!=='P');$('tabR').classList.toggle('hide',t!=='R');
+  $('tbP').classList.toggle('on',t==='P');$('tbR').classList.toggle('on',t==='R');
+  if(t==='R')refreshR()}
+async function refreshR(soft){
+  try{
+    R=(await dbGet('roturas'))||{};
+    const raw=(await dbGet('anot'))||{};A={};
+    Object.values(raw).forEach(g=>Object.entries(g||{}).forEach(([id,a])=>{A[id]=a}));
+  }catch(e){return}
+  if(soft&&document.activeElement&&document.activeElement.tagName==='SELECT'&&$('tabR').contains(document.activeElement))return;
+  renderR()}
+
+/* anotados en espera que pueden recibir esta bolsa (coincide producto y tienen cupo), por orden de anotación */
+function cola(r){
+  const mes=mesKey();
+  return Object.values(A).filter(a=>a.e==='ESPERA'&&(a.pr==='*'||a.pr===r.k)&&usadas(a.pk,mes)<LIM).sort((a,b)=>a.t-b.t)}
+const estR=r=>r.e==='DISPONIBLE'?'<span class="est">SIN ASIGNAR</span>':r.e==='ASIGNADA'?'<span class="est b">POR RETIRAR</span>':'<span class="est r">RETIRADA</span>';
+
+function renderR(){
+  if(!$('tabR'))return;
+  const mes=mesKey(),rs=Object.values(R),as=Object.values(A);
+  $('r1').textContent=rs.filter(r=>r.e==='DISPONIBLE').length;
+  $('r2').textContent=as.filter(a=>a.e==='ESPERA').length;
+  $('r3').textContent=rs.filter(r=>r.e==='ASIGNADA').length;
+  $('r4').textContent=rs.filter(r=>r.e==='RETIRADA'&&r.f&&mesKey(r.f)===mes).length;
+
+  /* pedidos en espera, agrupados por persona, por orden de llegada */
+  const porP={};as.forEach(x=>{(porP[x.pk]=porP[x.pk]||[]).push(x)});
+  const pend=as.filter(x=>x.e==='ESPERA');
+  const pers=Object.values(porP).filter(L=>showDone||L.some(x=>x.e==='ESPERA')).sort((x,y)=>{
+    const f=L=>Math.min(...(L.some(z=>z.e==='ESPERA')?L.filter(z=>z.e==='ESPERA'):L).map(z=>z.t));return f(x)-f(y)});
+  $('wlist').innerHTML=pers.length?pers.map((L,i)=>{L.sort((x,y)=>x.t-y.t);const u=usadas(L[0].pk,mes),x0=L[0];
+    return `<div class="sr" style="cursor:default;align-items:flex-start"><div><b>${i+1}. ${esc(x0.nm)}</b> ${u>=LIM?'<span class="tag" style="background:var(--bad)">SIN CUPO</span>':'<span class="small">cupo '+u+'/'+LIM+'</span>'}
+    <div class="small">${esc(x0.wa)}${x0.em?' · '+esc(x0.em):''} · pidió ${fd(x0.t)}</div>
+    <div style="margin-top:4px">${L.map(x=>x.e==='ESPERA'?`<span class="uchip">${esc(shortN(x.pr))}<button onclick="cancelarAnot('${x.id}')" title="Quitar">✕</button></span>`:`<span class="uchip done" title="Bolsa asignada"><s>${esc(shortN(x.pr))}</s> ✓</span>`).join('')}</div></div></div>`}).join('')
+    :'<div class="small" style="text-align:center;padding:16px">Nadie en espera.</div>';
+  $('prio').innerHTML=CONFIG.PRODUCTOS.map(p=>{
+    const q=pend.filter(x=>x.pr===p.k||x.pr==='*').sort((x,y)=>x.t-y.t),d=rs.filter(r=>r.e==='DISPONIBLE'&&r.k===p.k).length;
+    if(!q.length)return'';
+    return `<div style="margin-bottom:10px"><b>${esc(p.n)}</b> ${d?`<span class="est">${d} sin asignar</span>`:''}<ol class="small" style="margin:4px 0 0 18px;padding:0">${q.map(x=>`<li>${esc(x.nm)}${x.pr==='*'?' (cualquiera)':''}${usadas(x.pk,mes)>=LIM?' · <span style="color:var(--bad)">sin cupo este mes</span>':''}</li>`).join('')}</ol></div>`}).join('')||'<div class="small">Sin pedidos en espera.</div>';
+
+  /* chips + roturas */
+  const cnt=e=>rs.filter(r=>!e||r.e===e).length;
+  $('rchips').innerHTML=[['DISPONIBLE','SIN ASIGNAR','#f59e0b'],['ASIGNADA','POR RETIRAR','#2563eb'],['RETIRADA','RETIRADAS','#6b7280'],['','TODAS','#1d3557']]
+    .map(([e,t,c])=>`<button class="chip ${fRot===e?'on':''}" style="--c:${c}" onclick="setFR('${e}')">${t} (${cnt(e)})</button>`).join('');
+  const l=rs.filter(r=>!fRot||r.e===fRot).sort((a,b)=>fRot==='DISPONIBLE'?a.t-b.t:(b.ta||b.t)-(a.ta||a.t)).slice(0,200);
+  $('rlist').innerHTML=l.length?l.map(r=>`<tr><td>${fd(r.t)}</td><td>${esc(r.d)}<div class="small">${r.cod?esc(r.cod)+' · ':''}${esc(r.mo)} · ctl ${esc(r.ct)}</div></td><td>${esc(r.lo)}</td><td>${estR(r)}</td>
+    <td>${r.nm?`<b>${esc(r.nm)}</b><div class="small">${usadas(r.pk,r.m)}/${LIM} en${esc(r.m)}${r.rm?' · remito '+esc(r.rm):''}${r.f?' · retiró '+fd(r.f):''}</div>`:'—'}</td>
+    <td>${accionR(r,mes)}</td></tr>`).join('')
+    :'<tr><td colspan="6" class="small" style="text-align:center;padding:20px">Sin roturas para mostrar.</td></tr>';
+
+  /* cupo por persona */
+  const P2={};
+  as.forEach(a=>{const p=P2[a.pk]=P2[a.pk]||{nm:a.nm,wa:a.wa,w:0};if(a.e==='ESPERA')p.w++});
+  rs.forEach(r=>{if(r.pk){P2[r.pk]=P2[r.pk]||{nm:r.nm,wa:r.wa,w:0}}});
+  const ps=Object.entries(P2).sort((a,b)=>a[1].nm.localeCompare(b[1].nm));
+  $('clist').innerHTML=ps.length?ps.map(([pk,p])=>{const u=usadas(pk,mes);
+    return `<tr><td><b>${esc(p.nm)}</b></td><td>${esc(p.wa)}</td><td>${u} / ${LIM}</td><td><b>${rest(u)}</b></td><td>${p.w||'—'}</td></tr>`}).join('')
+    :'<tr><td colspan="5" class="small" style="text-align:center;padding:20px">Todavía no hay personas anotadas.</td></tr>'}
+const setFR=e=>{fRot=e;renderR()};
+
+function accionR(r,mes){
+  if(r.e==='DISPONIBLE'){
+    const c=cola(r);
+    if(!c.length)return `<div class="cellact"><span class="small">Sin anotados para este producto</span><button onclick="borrarR('${r.id}')" title="Eliminar">🗑</button></div>`;
+    return `<div class="cellact"><button class="pri" onclick="asignar('${r.id}','${c[0].id}')">Asignar a ${esc(c[0].nm.split(' ')[0])} y avisar</button>
+    ${c.length>1?`<select onchange="if(this.value)asignar('${r.id}',this.value)"><option value="">Otro…</option>${c.map(a=>`<option value="${a.id}">${esc(a.nm)} (${usadas(a.pk,mes)}/${LIM})</option>`).join('')}</select>`:''}
+    <button onclick="borrarR('${r.id}')" title="Eliminar">🗑</button></div>`}
+  if(r.e==='ASIGNADA')return `<div class="cellact"><button class="pri" onclick="retirarR('${r.id}')">✔ Retirada</button><button onclick="avisar('${r.id}')">📲 ${r.av?'Reavisar':'Avisar'}</button><button onclick="liberar('${r.id}')">↩ Liberar</button>${r.av?'<span class="small">avisado '+fh(r.av)+'</span>':''}</div>`;
+  return '<span class="small">—</span>'}
+
+async function guardarRotura(){
+  const prod=CONFIG.PRODUCTOS.find(p=>p.k===$('rp').value),lo=$('rl').value.trim(),n=parseInt($('rc').value)||0,ct=$('rk').value.trim().toUpperCase(),f=$('rf').value;
+  if(!prod||!lo||!ct||n<1||n>20||!f){$('rerr').textContent='Completá producto, lote, cantidad (1–20), controló y fecha.';return}
+  $('rerr').textContent='';
+  try{
+    const t=new Date(f+'T12:00:00').getTime(),nuevas=[];
+    for(let i=0;i<n;i++){const id=uid('r'),r={id,k:prod.k,cod:prod.c,d:prod.n,mo:$('rmo').value,lo,ct,t,e:'DISPONIBLE'};await dbSet('roturas/'+id,r);R[id]=r;nuevas.push(r)}
+    $('rl').value='';$('rc').value=1;fRot='DISPONIBLE';
+    const c=cola(nuevas[0]);
+    $('rres').classList.remove('hide');$('rres').innerHTML=`<div class="okbox">✔ ${n} ${plural(n,'bolsa registrada','bolsas registradas')}</div><div><b>${esc(prod.n)}</b> · lote ${esc(lo)}</div>
+      <p class="small" style="margin:8px 0 0">${c.length?`Hay ${c.length}${plural(c.length,'persona anotada','personas anotadas')} con cupo. Primera en la fila: <b>${esc(c[0].nm)}</b>. Asignala desde la tabla de abajo.`:'Todavía no hay nadie anotado con cupo para este producto; la bolsa queda sin asignar.'}</p>`;
+    await refreshR()
+  }catch(e){$('rerr').textContent='No se pudo guardar. Revisá la conexión.'}}
+
+async function syncCupo(pk,mes){await dbSet(`cupo/${pk}/${mes}`,usadas(pk,mes))}
+
+async function asignar(rid,aid){
+  try{
+    const r=await dbGet('roturas/'+rid),a=A[aid];
+    if(!r||!a||r.e!=='DISPONIBLE'){alert('Esa bolsa ya no está disponible.');await refreshR();return}
+    const af=await dbGet(`anot/${a.pk}/${aid}`);
+    if(!af||af.e!=='ESPERA'){alert('Esa anotación ya no está en espera.');await refreshR();return}
+    const mes=mesKey();
+    if(usadas(a.pk,mes)>=LIM){alert(a.nm+' ya completó su cupo de '+LIM+' este mes.');return}
+    const r2={...r,e:'ASIGNADA',a:aid,pk:a.pk,nm:a.nm,wa:a.wa,em:a.em||'',m:mes,ta:Date.now()};
+    await dbSet('roturas/'+rid,r2);await dbSet(`anot/${a.pk}/${aid}`,{...af,e:'ASIGNADO',r:rid});
+    R[rid]=r2;A[aid]={...af,e:'ASIGNADO',r:rid};await syncCupo(a.pk,mes);renderR();avisar(rid,true)
+  }catch(e){alert('No se pudo asignar. Revisá la conexión.')}}
+
+function mensaje(r){
+  const u=usadas(r.pk,r.m),q=rest(u);
+  return `Hola ${r.nm.split(' ')[0]}! 👋 Ya podés retirar tu bolsa: ${r.d} (lote ${r.lo}). Pasá a buscarla por ${CONFIG.LUGAR_RETIRO}.\n\nCon esta bolsa llevás ${u} de ${LIM} del mes. ${q?`Te ${plural(q,'queda','quedan')} ${q}${plural(q,'bolsa disponible','bolsas disponibles')} para retirar este mes.`:'Es la última que podés retirar este mes.'}\n\n${CONFIG.FIRMA_MSG}`}
+const EJS=()=>CONFIG.EMAILJS&&CONFIG.EMAILJS.service&&CONFIG.EMAILJS.template&&CONFIG.EMAILJS.key;
+async function enviarMailJS(r,msg){
+  const E=CONFIG.EMAILJS,x=await fetch('https://api.emailjs.com/api/v1.0/email/send',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({service_id:E.service,template_id:E.template,user_id:E.key,template_params:{to_email:r.em,to_name:r.nm,subject:'Tu bolsa para retirar: '+r.d,message:msg}})});
+  if(!x.ok)throw new Error('mail')}
+async function marcarAv(rid){const r=R[rid];if(!r)return;const r2={...r,av:Date.now()};R[rid]=r2;try{await dbSet('roturas/'+rid,r2)}catch(e){}renderR()}
+function avisar(rid,nuevo){
+  const r=R[rid];if(!r)return;
+  const msg=mensaje(r),wl=`https://wa.me/${CONFIG.PREFIJO_WA}${dig(r.wa).slice(-10)}?text=${encodeURIComponent(msg)}`,
+    ml=r.em?`mailto:${r.em}?subject=${encodeURIComponent('Tu bolsa para retirar: '+r.d)}&body=${encodeURIComponent(msg)}`:'';
+  $('avbody').innerHTML=`<div class="okbox">${nuevo?'✔ Bolsa asignada':'Aviso'} a ${esc(r.nm)}</div>
+    <div class="small">${esc(r.d)} · lote ${esc(r.lo)}</div><div class="msgbox">${esc(msg)}</div>
+    <a class="bl wa" href="${wl}" target="_blank" rel="noopener" onclick="marcarAv('${rid}')">📲 Enviar por WhatsApp (${esc(r.wa)})</a>
+    ${ml?`<a class="bl" href="${esc(ml)}" onclick="marcarAv('${rid}')">✉ Enviar por mail (${esc(r.em)})</a>`:'<div class="small" style="margin-top:8px">Esta persona no dejó mail.</div>'}
+    <div id="avst" class="small" style="margin-top:8px"></div>
+    <button class="full" onclick="$('avmodal').classList.add('hide')">Cerrar</button>`;
+  $('avmodal').classList.remove('hide');
+  if(nuevo&&EJS()&&r.em){$('avst').textContent='Enviando mail automático…';
+    enviarMailJS(r,msg).then(()=>{$('avst').innerHTML='<span class="okbox">✔ Mail enviado automáticamente</span>';marcarAv(rid)}).catch(()=>{$('avst').textContent='⚠ No se pudo enviar el mail automático; usá los botones.'})}}
+
+async function retirarR(rid){
+  const r=R[rid];if(!r)return;
+  const rm=prompt('N° de remito (opcional):','');if(rm===null)return;
+  try{const r2={...r,e:'RETIRADA',f:Date.now()};if(rm.trim())r2.rm=rm.trim();await dbSet('roturas/'+rid,r2);R[rid]=r2;renderR()}
+  catch(e){alert('No se pudo registrar el retiro.')}}
+async function liberar(rid){
+  const r=R[rid];if(!r||!confirm('¿Liberar la bolsa? Vuelve a estar sin asignar y '+r.nm+' vuelve a la lista de espera (conserva su lugar).'))return;
+  try{
+    const base={id:r.id,k:r.k,cod:r.cod,d:r.d,mo:r.mo,lo:r.lo,ct:r.ct,t:r.t,e:'DISPONIBLE'};
+    await dbSet('roturas/'+rid,base);R[rid]=base;
+    const a=A[r.a];if(a){const a2={...a,e:'ESPERA'};delete a2.r;await dbSet(`anot/${a.pk}/${a.id}`,a2);A[a.id]=a2}
+    await syncCupo(r.pk,r.m);renderR()
+  }catch(e){alert('No se pudo liberar.')}}
+async function borrarR(rid){if(!confirm('¿Eliminar esta bolsa registrada?'))return;try{await dbSet('roturas/'+rid,null);delete R[rid];renderR()}catch(e){alert('Error.')}}
+async function cancelarAnot(aid){const a=A[aid];if(!a||!confirm('¿Quitar a '+a.nm+' de la lista de espera?'))return;try{await dbSet(`anot/${a.pk}/${aid}`,null);delete A[aid];renderR()}catch(e){alert('Error.')}}
+
+function csvR(){
+  const q=s=>'"'+String(s==null?'':s).replace(/"/g,'""')+'"';
+  const rows=Object.values(R).sort((a,b)=>a.t-b.t).map(r=>[r.cod,r.d,r.mo,r.lo,1,r.ct,fd(r.t),r.e==='RETIRADA'?'OK':'',r.rm||'',r.nm||'',r.m||''].map(q).join(','));
+  const out=['CODIGO,DESCRIPCION,MOTIVO,LOTE,CANTIDAD,CONTROLO,FECHA,OK,REMITO PARA,PERSONA,MES'].concat(rows).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+out],{type:'text/csv'}));a.download='roturas-'+hoyISO()+'.csv';a.click()}
+function cartelR(){
+  if(!FB){alert('El cartel necesita la base de datos compartida (FIREBASE_URL).');return}
+  $('lblArea').innerHTML=`<div class="lbl"><div class="t">BOLSAS ROTAS</div><div class="q" style="width:60mm;height:60mm"></div><div class="pn" style="font-size:5.5mm">ESCANEÁ Y ANOTATE<br>PARA RETIRAR</div><div class="s">Límite ${LIM} por mes · te avisamos cuando haya</div></div>`;
+  qr($('lblArea').querySelector('.q'),base()+'#roturas');$('lblmodal').classList.remove('hide')}
+
+/* ---- formulario de pedido (varios productos) · lo usan la página pública y el mostrador ---- */
+const linHTML=()=>`<div class="lin" style="display:grid;grid-template-columns:1fr 64px 36px;gap:6px;margin-top:6px"><select class="lp">${prodOpts(true)}</select><input class="lq" type="number" min="1" max="${MAXQ}" value="1" title="Cantidad"><button type="button" style="padding:0" onclick="this.parentNode.remove()">✕</button></div>`;
+const addLin=p=>$(p+'L').insertAdjacentHTML('beforeend',linHTML());
+function formAnotar(p,btn){
+  return `<label>Nombre y apellido *</label><input id="${p}n" autocomplete="off" style="text-transform:uppercase">
+    <label>WhatsApp * (con código de área, sin 0 ni 15)</label><input id="${p}w" type="tel" inputmode="tel" placeholder="11 5555 1234" autocomplete="off">
+    <label>Mail (opcional)</label><input id="${p}e" type="email" autocomplete="off">
+    <label>Productos y cantidad * <span style="font-weight:400">(podés elegir varios)</span></label>
+    <div id="${p}L">${linHTML()}</div>
+    <button type="button" style="margin-top:8px" onclick="addLin('${p}')">➕ Agregar otro producto</button>
+    <p class="small">Se entregan por orden de llegada, hasta ${LIM} bolsas por persona por mes. Si pedís más, el resto sigue en espera para el mes siguiente.</p>
+    <div class="err" id="${p}err"></div><button class="pri full" id="${p}b" onclick="anotar('${p}')">${btn}</button>`}
+async function anotar(p){
+  const nm=$(p+'n').value.trim().toUpperCase(),wa=$(p+'w').value.trim(),em=$(p+'e').value.trim(),pk=pkOf(wa),err=$(p+'err');
+  const L=[...$(p+'L').querySelectorAll('.lin')].map(d=>({pr:d.querySelector('.lp').value,q:parseInt(d.querySelector('.lq').value)||0}));
+  const tot=L.reduce((s,x)=>s+x.q,0);
+  if(nm.length<3){err.textContent='Falta nombre y apellido.';return}
+  if(!pk){err.textContent='Ingresá un WhatsApp válido (código de área + número, mínimo 10 dígitos).';return}
+  if(em&&!emailOk(em)){err.textContent='El mail no parece válido.';return}
+  if(!L.length||L.some(x=>x.q<1||x.q>MAXQ)){err.textContent='Elegí al menos un producto, con cantidad de 1 a '+MAXQ+'.';return}
+  err.textContent='';$(p+'b').disabled=true;
+  try{
+    const ex=Object.values((await dbGet('anot/'+pk))||{}).filter(x=>x.e==='ESPERA').length;
+    if(ex+tot>MAXPEND){err.textContent='Ya hay '+ex+' unidades en espera para este WhatsApp (máximo '+MAXPEND+').';$(p+'b').disabled=false;return}
+    const g=uid('g'),t0=Date.now();let i=0;
+    for(const x of L)for(let k=0;k<x.q;k++){const id=uid('a');const a={id,g,pk,nm,wa,em,pr:x.pr,t:t0+i,e:'ESPERA'};i++;await dbSet(`anot/${pk}/${id}`,a);A[id]=a}
+    const u=(await dbGet(`cupo/${pk}/${mesKey()}`))||0,resumen=L.map(x=>`${x.q} × ${esc(prodN(x.pr))}`).join('<br>');
+    if(p==='s'){
+      $('rres').classList.remove('hide');$('rres').innerHTML=`<div class="okbox">✔ Pedido anotado para ${esc(nm)}</div><div class="small">${resumen}</div>`;
+      $('stform').innerHTML=formAnotar('s','Anotar pedido');await refreshR()
+    }else{
+      $('anform').innerHTML=`<div style="text-align:center"><span class="est" style="background:var(--ok);color:#fff">✔ ANOTADO/A</span><h3 style="margin:10px 0 0">${esc(nm)}</h3>
+      <p>${resumen}</p><p class="small">Te vamos a avisar por WhatsApp${em?' y por mail':''} a medida que haya bolsas, respetando el orden en que te anotaste.<br>
+      Este mes retiraste ${u} de ${LIM}: te ${plural(rest(u),'queda','quedan')} <b>${rest(u)}</b>.</p></div>`}
+  }catch(e){err.textContent='No se pudo anotar. Intentá de nuevo.';$(p+'b').disabled=false}}
+
+/* ---- pantalla pública: anotarse y ver cupo ---- */
+function vistaRoturas(){
+  $('pub').classList.remove('hide');
+  if(!FB){$('pub').innerHTML=AVISO_LOCAL;return}$('pub').innerHTML=`<div class="card" id="anform"><h2>🐾 Bolsas rotas del depósito</h2>
+    <p class="small" style="margin:0">Anotate y te avisamos por WhatsApp o mail cuando haya una bolsa para vos. Podés retirar hasta <b>${LIM} por mes</b>.</p>
+    ${formAnotar('a','Anotarme')}</div>
+    <div class="card"><h2>Mi cupo y mis pedidos</h2>
+    <div class="searchbar"><input id="cw" type="tel" inputmode="tel" placeholder="Tu WhatsApp"><button class="pri" onclick="miCupo()">Ver</button></div>
+    <div id="cres" style="margin-top:10px"></div></div>`}
+async function miCupo(){
+  const pk=pkOf($('cw').value),out=$('cres');
+  if(!pk){out.innerHTML='<div class="small">Ingresá tu WhatsApp completo.</div>';return}
+  out.textContent='Buscando…';
+  try{
+    const lim=Date.now()-90*864e5,ex=Object.values((await dbGet('anot/'+pk))||{}).filter(a=>a.e==='ESPERA'||a.t>lim),u=(await dbGet(`cupo/${pk}/${mesKey()}`))||0;
+    if(!ex.length){out.innerHTML='<div class="small">No encontramos pedidos con ese WhatsApp.</div>';return}
+    const G={};ex.sort((a,b)=>a.t-b.t).forEach(a=>{(G[a.pr]=G[a.pr]||[]).push(a)});
+    out.innerHTML=`<div class="stat" style="box-shadow:none;margin-bottom:10px"><b>${rest(u)}</b><span>${plural(rest(u),'bolsa disponible','bolsas disponibles')} este mes (usaste ${u} de ${LIM})</span></div>`+
+      Object.entries(G).map(([k,L])=>{const w=L.filter(a=>a.e==='ESPERA').length,d=L.length-w;
+        return `<div class="sr" style="cursor:default"><div><b>${esc(prodN(k))}</b><div class="small">${L.length} pedida${L.length>1?'s':''}</div></div><div style="text-align:right">${d?`<span class="est b">${d} LISTA${d>1?'S':''} PARA RETIRAR</span> `:''}${w?`<span class="est">${w} EN ESPERA</span>`:''}</div></div>`}).join('')
+  }catch(e){out.innerHTML='<div class="small">Sin conexión.</div>'}}
+
+/* ---- inicio ---- */
+function iniciarPanel(){$('panel').classList.remove('hide');$('bcartel').classList.toggle('hide',!FB);$('bprobar').classList.toggle('hide',!FB);initR();refresh();refreshR();setInterval(()=>{refresh();refreshR(true)},15000);$('q').focus()}
+function checkPin(){
+  if($('pin').value===CONFIG.PIN){try{sessionStorage.setItem('pinr','1')}catch(e){}$('gate').classList.add('hide');iniciarPanel()}
+  else $('pinerr').textContent='PIN incorrecto'}
+addEventListener('hashchange',()=>location.reload());
+(function(){
+  const h=location.hash,m=h.match(/^#p=(.+)$/),dd=h.match(/^#d=(.+)$/);
+  if(dd){$('modo').textContent='Consulta de pedido';vistaSnapshot(dd[1]);return}
+  if(m){$('modo').textContent='Consulta de pedido';vistaPedido(decodeURIComponent(m[1]));return}
+  if(h==='#roturas'){$('modo').textContent='Bolsas rotas · anotate para retirar';vistaRoturas();return}
+  if(h==='#consulta'){$('modo').textContent='Consulta de pedidos';vistaConsulta();return}
+  let ok=!CONFIG.PIN;try{ok=ok||sessionStorage.getItem('pinr')==='1'}catch(e){}
+  if(ok)iniciarPanel();else $('gate').classList.remove('hide');
+})();
+</script>
+</body>
+</html>
